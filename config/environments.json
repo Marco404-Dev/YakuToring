@@ -1,0 +1,65 @@
+{
+  "default": "manglar",
+  "environments": {
+    "manglar": {
+      "name": "Manglar o estuario",
+      "ecosystem": "Costa estuarina, referencia provisional",
+      "regulatoryProfile": "E3",
+      "availability": "provisional",
+      "validation": "Validación local pendiente",
+      "dataset": {
+        "name": "NOAA NERRS SWMP",
+        "geography": "Florida, EE. UU.",
+        "records": 957331
+      },
+      "variables": {
+        "temperatura_agua_C": "°C",
+        "pH": "unidad de pH",
+        "conductividad_especifica_mS_cm": "mS/cm",
+        "presion_atmosferica_hPa": "hPa"
+      },
+      "limitations": [
+        "La muestra histórica de Florida incluye mediciones estuarinas. Falta confirmar la composición exacta por estación y hábitat.",
+        "Dataset específico de los Manglares de Tumbes pendiente."
+      ],
+      "artifacts": {
+        "version": "florida-v1",
+        "trainedAt": null,
+        "reference": "environment_models/florida-v1.json",
+        "clustering": "environment_models/florida-v1.joblib",
+        "evaluation": "environment_models/noaa-experiments-v1.json",
+        "catboost": "models/comparison/entrenamiento_07/07_CatBoost_base05_300k.joblib",
+        "catboostSha256": "234e7d1c4132a384216bd2479c24034ceab38679eaf887aece0a7d284beb4add",
+        "reduced": "environment_models/noaa-experiments-v1.joblib"
+      }
+    },
+    "humedal": {
+      "name": "Laguna o humedal",
+      "ecosystem": "Aguas continentales",
+      "regulatoryProfile": "E1",
+      "availability": "pending",
+      "validation": "Pendiente",
+      "dataset": null,
+      "variables": {},
+      "artifacts": null,
+      "limitations": [
+        "Dataset especializado pendiente de incorporación.",
+        "CatBoost y clustering especializados pendientes."
+      ]
+    },
+    "laboratorio": {
+      "name": "Laboratorio",
+      "ecosystem": "Mediciones experimentales",
+      "regulatoryProfile": "lab",
+      "availability": "pending",
+      "validation": "Pendiente",
+      "dataset": null,
+      "variables": {},
+      "artifacts": null,
+      "limitations": [
+        "Dataset especializado pendiente de incorporación.",
+        "La corrección local y el clustering exploratorio requieren muestras físicas independientes."
+      ]
+    }
+  }
+}

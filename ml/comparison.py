@@ -13,6 +13,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import joblib
+from environment_registry import REGISTRY, artifact
 import numpy as np
 import pandas as pd
 from catboost import CatBoostRegressor
@@ -63,7 +64,7 @@ def timestamp(value):
 
 
 class Models:
-    def __init__(self, artifact_dir=ARTIFACTS, enabled=MODEL_KEYS):
+    def __init__(self, artifact_dir=ARTIFACTS, enabled=MODEL_KEYS, environment=None):
         self.loaded = {}
         self.enabled = set(enabled)
         self.errors = {}
@@ -71,6 +72,7 @@ class Models:
         self.version = "NOAA-07-08-09-experimental"
         self.tz = ZoneInfo("America/Lima")
         self.artifact_dir = Path(artifact_dir)
+        self.environment = environment
         try:
             self.manifest = json.loads((self.artifact_dir / "manifest.json").read_text(encoding="utf-8-sig"))
         except (OSError, ValueError):
@@ -101,7 +103,16 @@ class Models:
         return path
 
     def load_catboost(self):
-        bundle = joblib.load(self.path("07_CatBoost_base05_300k.joblib"))
+        if self.environment:
+            path = artifact(self.environment,"catboost")
+            expected = REGISTRY["environments"][self.environment]["artifacts"]["catboostSha256"]
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            if digest != expected:
+                raise ValueError("SHA-256 inválido en CatBoost.")
+            self.hashes[path.name] = digest
+        else:
+            path = self.path("07_CatBoost_base05_300k.joblib")
+        bundle = joblib.load(path)
         model = bundle["estimador"]
         if bundle["features"] != FEATURES or bundle["objetivo"] != "DO_mgl":
             raise ValueError("Contrato CatBoost incompatible")

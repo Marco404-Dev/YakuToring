@@ -237,7 +237,7 @@ try {
   await value("location.hash = 'clustering'");
   await waitFor(() =>
     value(
-      "document.querySelector('main').innerText.includes('Perfiles históricos de Florida')",
+      "document.querySelector('main').innerText.includes('Perfiles históricos · Florida')",
     ),
   );
   assert.equal(
@@ -268,6 +268,16 @@ try {
     return info.status === "ready" && info;
   });
   assert.deepEqual(model.activeModels, ["catboost"]);
+  for (const environment of ["humedal", "laboratorio"]) {
+    const pending = (
+      await command("Runtime.evaluate", {
+        expression: `fetch('/api/environment/reference?environment=${environment}').then(x=>x.status)`,
+        awaitPromise: true,
+        returnByValue: true,
+      })
+    ).result.value;
+    assert.equal(pending, 404);
+  }
   assert.deepEqual(
     Object.keys(model.comparison.availability).filter(
       (key) => model.comparison.availability[key].loaded,

@@ -24,6 +24,7 @@ const env = process.env;
 const conductivityUnit = env.YAKUTORING_EC_INPUT_UNIT || "uS/cm";
 normalizeConductivity({}, conductivityUnit);
 const portNumber = Number(env.PORT || 3001);
+const cloudSerial = env.YAKUTORING_SERIAL_MODE === "agent";
 const app = express();
 app.disable("x-powered-by");
 const parseJson = express.json({ limit: "16kb" });
@@ -38,8 +39,16 @@ const databasePath = path.resolve(
 );
 const collection = new Collection(databasePath);
 const anomalyLog = new AnomalyLog(databasePath);
-const ml = new MLClient(root, { databasePath });
-installEnvironmentRoutes(app, root, permissions, ml);
+const ml = new MLClient(root, {
+  databasePath,
+  telemetryPath: env.YAKUTORING_TELEMETRY_PATH || undefined,
+});
+app.get("/healthz", (_, res) =>
+  res.status(ml.state.status === "ready" ? 200 : 503).json({
+    status: ml.state.status === "ready" ? "ok" : "starting",
+  }),
+);
+await installEnvironmentRoutes(app, root, permissions, ml);
 let serial,
   busy = false,
   buffer = "",
@@ -116,9 +125,16 @@ function snapshot(req) {
     same = req.query.sessionId === sessionId,
     odAfter = Number(req.query.odAfter),
     selected = Number(req.query.collectionId);
+  const liveStatus =
+    cloudSerial &&
+    status.connected &&
+    Date.now() - Date.parse(readings.at(-1)?.at) > staleSeconds * 1000
+      ? { connected: false, path: null, error: null }
+      : status;
   return {
     sessionId,
-    status,
+    status: liveStatus,
+    serialMode: cloudSerial ? "agent" : "local",
     connectedAt,
     readings: same ? readings.filter((r) => r.id > after) : readings,
     odUpdates:
@@ -154,6 +170,14 @@ app.get("/api/experiments/runs", permissions.sender, async (req, res, next) => {
   }
 });
 const parser = new PacketParser((raw) => {
+  if (
+    cloudSerial &&
+    (!status.connected ||
+      Date.now() - Date.parse(readings.at(-1)?.at) > staleSeconds * 1000)
+  ) {
+    connectedAt = raw.at;
+    status = { connected: true, path: "Agente Heltec HTTPS", error: null };
+  }
   const row = normalizeConductivity(raw, conductivityUnit);
   row.id = readings.length + 1;
   readings.push(row);
@@ -181,6 +205,25 @@ const parser = new PacketParser((raw) => {
     row.od_estimado_mg_l = update.od_estimado_mg_l;
     odUpdates.push(update);
   });
+});
+app.post("/ingest/heltec", (req, res) => {
+  const token = env.YAKUTORING_INGEST_TOKEN;
+  if (!cloudSerial || !token || token.length < 32) return res.sendStatus(404);
+  const supplied = req.get("Authorization") || "";
+  const digest = (value) => crypto.createHash("sha256").update(value).digest();
+  if (!crypto.timingSafeEqual(digest(supplied), digest(`Bearer ${token}`)))
+    return res.sendStatus(401);
+  if (
+    !Array.isArray(req.body?.lines) ||
+    req.body.lines.length > 64 ||
+    req.body.lines.some(
+      (line) =>
+        typeof line !== "string" || line.length > 240 || /[\r\n]/.test(line),
+    )
+  )
+    return res.status(400).json({ error: "Lote serial inválido." });
+  for (const line of req.body.lines) parser.feed(line);
+  res.sendStatus(202);
 });
 app.get("/api/environment/anomalies", (_, res) =>
   res.json(anomalyLog.snapshot()),
@@ -372,6 +415,7 @@ app.get("/api/events", (_, res) =>
   }),
 );
 app.get("/api/ports", permissions.admin, async (_, res, next) => {
+  if (cloudSerial) return res.json([]);
   try {
     res.json(await SerialPort.list());
   } catch {
@@ -383,6 +427,12 @@ app.get("/api/ports", permissions.admin, async (_, res, next) => {
   }
 });
 app.post("/api/connect", permissions.admin, async (req, res, next) => {
+  if (cloudSerial)
+    return res
+      .status(409)
+      .json({
+        error: "Usa el agente Heltec en la computadora conectada por USB.",
+      });
   if (busy || serial)
     return res
       .status(409)
@@ -454,6 +504,12 @@ app.post("/api/connect", permissions.admin, async (req, res, next) => {
   }
 });
 app.post("/api/disconnect", permissions.admin, async (_, res, next) => {
+  if (cloudSerial)
+    return res
+      .status(409)
+      .json({
+        error: "Detén el agente Heltec para desconectar la estación remota.",
+      });
   if (busy)
     return res.status(409).json({ error: "Operación serial en curso." });
   busy = true;
@@ -682,13 +738,16 @@ app.use((err, req, res, next) => {
           ),
   });
 });
-const server = app.listen(portNumber, "127.0.0.1", () =>
-  console.log(`YakuToring: http://127.0.0.1:${portNumber}`),
+const host = env.YAKUTORING_HOST || "127.0.0.1";
+const server = app.listen(portNumber, host, () =>
+  console.log(`YakuToring: http://${host}:${portNumber}`),
 );
-process.on("SIGINT", () => {
+function shutdown() {
   ml.close();
   parser.reset();
   if (serial?.isOpen) serial.close();
   server.close(() => process.exit(0));
-});
+}
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 process.on("exit", () => ml.close());

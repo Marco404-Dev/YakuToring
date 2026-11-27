@@ -44,7 +44,8 @@ export class MLClient {
       env: {
         ...Object.fromEntries(
           Object.entries(process.env).filter(
-            ([key]) => !key.startsWith("WHATSAPP_"),
+            ([key]) =>
+              !key.startsWith("WHATSAPP_") && key !== "YAKUTORING_INGEST_TOKEN",
           ),
         ),
         PYTHONUNBUFFERED: "1",

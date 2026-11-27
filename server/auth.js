@@ -23,7 +23,13 @@ export function verifyPassword(password, entry) {
 export function installSecurity(app, root, port) {
   const sessions = new Map(),
     failures = new Map();
-  const configPath = path.join(root, ".local", "users.json");
+  const configPath =
+    process.env.YAKUTORING_USERS_PATH ||
+    path.join(root, ".local", "users.json");
+  const cloudOrigins = [
+    process.env.RENDER_EXTERNAL_URL,
+    process.env.YAKUTORING_FRONTEND_ORIGIN,
+  ].filter((value) => value && /^https:\/\/[^/]+$/.test(value));
   const users = () => {
     try {
       return JSON.parse(fs.readFileSync(configPath, "utf8"));
@@ -40,7 +46,7 @@ export function installSecurity(app, root, port) {
       "Content-Security-Policy":
         "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
     });
-    const origins = remoteOrigins(root);
+    const origins = [...remoteOrigins(root), ...cloudOrigins];
     const localOrigins = [
       `http://127.0.0.1:${port}`,
       `http://localhost:${port}`,
@@ -49,18 +55,24 @@ export function installSecurity(app, root, port) {
     ];
     const allowed = [...localOrigins, ...origins];
     const host = req.headers.host?.toLowerCase();
+    if (req.path === "/healthz" && req.method === "GET") return next();
     if (!allowed.some((o) => new URL(o).host === host))
       return res.status(403).json({ error: "Host no autorizado." });
     const origin = origins.find((o) => new URL(o).host === host);
+    const proxyOrigin =
+      cloudOrigins.includes(origin) && process.env.YAKUTORING_FRONTEND_ORIGIN;
     req.remoteOrigin = !!origin;
     if (
       !["GET", "HEAD"].includes(req.method) &&
       !(req.method === "POST" && req.path === webhookPath) &&
+      !(req.method === "POST" && req.path === "/ingest/heltec") &&
       (!req.headers.origin ||
         !(req.remoteOrigin ? origins : localOrigins).includes(
           req.headers.origin,
         ) ||
-        (req.remoteOrigin && req.headers.origin !== origin))
+        (req.remoteOrigin &&
+          req.headers.origin !== origin &&
+          req.headers.origin !== proxyOrigin))
     )
       return res.status(403).json({ error: "Origen no autorizado." });
     const token = /(?:^|;\s*)yaku_session=([a-f0-9]{64})(?:;|$)/.exec(

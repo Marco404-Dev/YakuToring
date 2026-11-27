@@ -18,6 +18,7 @@ from environment_inference import predict as predict_environment
 from datasets import Datasets
 from comparison import Comparison, Models
 from model_flags import enabled_models
+from environment_registry import DEFAULT, REGISTRY
 
 def wire(raw,lot):
     # Lista positiva: VOD, referencia OD, humedad y voltajes no pasan al ML.
@@ -93,7 +94,12 @@ def main():
     flags = enabled_models()
     engine = Engine(enabled='legacy' in flags)
     od = ExperimentalOD(engine.db, enabled='noaa' in flags)
-    comparison = Comparison(engine.db, Models(enabled=flags))
+    environment = os.getenv('YAKUTORING_MONITOR_ENVIRONMENT', DEFAULT)
+    if environment not in REGISTRY['environments']:
+        raise ValueError('Entorno de monitoreo desconocido.')
+    automatic = REGISTRY['environments'][environment].get('artifacts') or {}
+    comparison = Comparison(engine.db, Models(enabled=flags if automatic.get('catboost') else set(), environment=environment))
+    models_by_env = {environment: comparison.models}
     datasets = Datasets(engine.db)
     live = None
 
@@ -101,6 +107,7 @@ def main():
         return {
             **snapshot,
             'activeModels': sorted(flags),
+            'monitorEnvironment': environment,
             'liveOD': live,
             'provisionalEC': od.allow_provisional,
             'experimentalOd': od.snapshot(engine.settings['lotId']),
@@ -118,12 +125,13 @@ def main():
                 snapshot = engine.ingest(row) if 'legacy' in flags else engine.snapshot()
                 if 'noaa' in flags:
                     od.ingest(row, engine.settings['lotId'])
-                reason = None if od.allow_provisional else 'La conductividad del dispositivo requiere validación antes de estimar OD.'
+                reason = ('Dataset especializado pendiente de incorporación.' if not automatic.get('catboost')
+                          else None if od.allow_provisional else 'La conductividad del dispositivo requiere validación antes de estimar OD.')
                 if reason:
                     run = comparison.models.predict(row, blocked=reason)
                     run['status'] = reason
                 else:
-                    result = predict_environment(comparison.models, row, score_isolation=False)['predictions'][0]
+                    result = predict_environment(comparison.models, row, score_isolation=False, environment=environment)['predictions'][0]
                     run = result if 'models' in result else comparison.models.predict(row, blocked=result['status'])
                     run['status'] = result['status']
                     run['reason'] = result.get('reason')
@@ -154,8 +162,11 @@ def main():
             elif op=='environment_predictions':
                 if message.get('noConductivity') and 'reduced' not in flags:
                     raise ValueError('CatBoost sin conductividad está desactivado.')
-                data = predict_environment(comparison.models, message.get('row'), message.get('csv'),
-                                           message.get('noConductivity', False))
+                chosen = message.get('environment', DEFAULT)
+                if chosen not in models_by_env:
+                    models_by_env[chosen] = Models(enabled=flags & {'catboost'}, environment=chosen)
+                data = predict_environment(models_by_env[chosen], message.get('row'), message.get('csv'),
+                                           message.get('noConductivity', False), environment=chosen)
             elif op=='datasets_list':
                 data = datasets.list()
             elif op=='datasets_add':

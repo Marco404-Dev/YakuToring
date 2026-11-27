@@ -186,23 +186,23 @@ const colors = [
   "#715136",
 ];
 
-export function useReference(api, enabled) {
+export function useReference(api, enabled, environment = "manglar") {
   const [state, setState] = useState({});
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    api("environment/reference")
+    api(`environment/reference?environment=${encodeURIComponent(environment)}`)
       .then((report) => {
-        if (active) setState({ report });
+        if (active) setState({ report, environment });
       })
       .catch((error) => {
-        if (active) setState({ error: error.message });
+        if (active) setState({ error: error.message, environment });
       });
     return () => {
       active = false;
     };
-  }, [api, enabled]);
-  return state;
+  }, [api, enabled, environment]);
+  return state.environment === environment ? state : {};
 }
 
 export function Table({ headings, rows }) {
@@ -419,9 +419,9 @@ function Sparkline({ rows, field, name, unit, digits }) {
   );
 }
 
-export function Clustering({ reference, technical }) {
+export function Clustering({ reference, technical, environment }) {
   const [cluster, setCluster] = useState("all");
-  const [inputs, setInputs] = useState(["", "", "", ""]);
+  const [entry, setEntry] = useState({});
   const [valid, setValid] = useState(false);
   const [domain, setDomain] = useState("Campo Perú");
   const { report, error } = reference;
@@ -437,8 +437,19 @@ export function Clustering({ reference, technical }) {
         Cargando referencia histórica…
       </div>
     );
+  const variableLabels = {
+    temperatura_agua_C: "Temperatura (°C)",
+    pH: "pH",
+    conductividad_especifica_mS_cm: "Conductividad específica (mS/cm)",
+    presion_atmosferica_hPa: "Presión (hPa)",
+  };
+  const labels = report.features.map(
+    (feature) => variableLabels[feature] || feature,
+  );
+  const inputs = report.features.map((feature) => entry[feature] ?? "");
+  const ecIndex = report.features.indexOf("conductividad_especifica_mS_cm");
   const projection =
-    valid && inputs.every((value) => value.trim() !== "")
+    (ecIndex < 0 || valid) && inputs.every((value) => value.trim() !== "")
       ? projectReference(report, inputs.map(Number))
       : null;
   const matched = report.clusters.find(
@@ -446,12 +457,14 @@ export function Clustering({ reference, technical }) {
   );
   const profileName = (item) => {
     const lower = report.clusters.every(
-      (other) => item.id === other.id || item.means[2] < other.means[2],
+      (other) =>
+        item.id === other.id || item.means[ecIndex] < other.means[ecIndex],
     );
     const higher = report.clusters.every(
-      (other) => item.id === other.id || item.means[2] > other.means[2],
+      (other) =>
+        item.id === other.id || item.means[ecIndex] > other.means[ecIndex],
     );
-    return report.clusters.length > 1 && (lower || higher)
+    return ecIndex >= 0 && report.clusters.length > 1 && (lower || higher)
       ? `Perfil de ${lower ? "menor" : "mayor"} conductividad`
       : `Perfil ${item.id + 1}`;
   };
@@ -508,13 +521,16 @@ export function Clustering({ reference, technical }) {
   return (
     <>
       {!technical && (
-        <Guidance title="Perfiles históricos de Florida">
+        <Guidance
+          title={`Perfiles históricos · ${environment.dataset?.geography || "referencia"}`}
+        >
           {report.clusters.map((item) => (
             <p key={item.id}>
               <strong>{profileName(item)}.</strong>{" "}
-              {item.n.toLocaleString("es-PE")} registros, conductividad media{" "}
-              {format(item.means[2])} mS/cm y OD histórico mediano{" "}
-              {format(item.oxygenMedian)} mg/L.
+              {item.n.toLocaleString("es-PE")} registros,{" "}
+              {ecIndex >= 0 &&
+                `conductividad media ${format(item.means[ecIndex])} mS/cm y `}
+              OD histórico mediano {format(item.oxygenMedian)} mg/L.
             </p>
           ))}
           <Info term="Clustering" />
@@ -524,7 +540,7 @@ export function Clustering({ reference, technical }) {
         <section className="panel workspace-section">
           <div className="section-title">
             <div>
-              <h2>Referencia Florida · Apalachicola Bay</h2>
+              <h2>Referencia · {environment.dataset?.name}</h2>
               <p>
                 {report.records.toLocaleString("es-PE")} registros ·{" "}
                 {report.first.slice(0, 10)} a {report.last.slice(0, 10)} ·{" "}
@@ -617,11 +633,7 @@ export function Clustering({ reference, technical }) {
                 step="any"
                 value={inputs[i]}
                 onChange={(e) =>
-                  setInputs(
-                    inputs.map((value, j) =>
-                      j === i ? e.target.value : value,
-                    ),
-                  )
+                  setEntry({ ...entry, [report.features[i]]: e.target.value })
                 }
               />
             </label>
@@ -634,24 +646,26 @@ export function Clustering({ reference, technical }) {
             </select>
           </label>
         </div>
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={valid}
-            onChange={(e) => setValid(e.target.checked)}
-          />
-          Conductividad específica validada y compatible con la referencia
-        </label>
+        {ecIndex >= 0 && (
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={valid}
+              onChange={(e) => setValid(e.target.checked)}
+            />
+            Conductividad específica validada y compatible con la referencia
+          </label>
+        )}
         <p role="status">
           {projection
             ? `${projection.status}${technical ? ` · Distancia ${format(projection.distance)}` : ""}${matched ? ` · ${profileName(matched)}` : ""}`
-            : "Ingresa las cuatro variables compatibles para proyectar. El agrupamiento local requiere una campaña representativa."}
+            : "Ingresa las variables compatibles para proyectar. El agrupamiento local requiere una campaña representativa."}
         </p>
       </section>
       <Guidance title="¿Qué significa este perfil?">
         <p>
           {matched
-            ? `La muestra se parece a un perfil con ${matched.n.toLocaleString("es-PE")} registros históricos, conductividad media de ${format(matched.means[2])} mS/cm y OD mediano histórico de ${format(matched.oxygenMedian)} mg/L.`
+            ? `La muestra se parece a un perfil con ${matched.n.toLocaleString("es-PE")} registros históricos y OD mediano histórico de ${format(matched.oxygenMedian)} mg/L.`
             : drivers
               ? `Las mayores diferencias estandarizadas frente al perfil más cercano corresponden a ${drivers}.`
               : "Ingresa una muestra compatible para conocer su perfil."}
@@ -695,18 +709,15 @@ export function Clustering({ reference, technical }) {
               Distribución de OD histórico · extremos P05 y P95 · caja P25 a P75
             </small>
             <p>
-              La distribución histórica de OD describe Florida. La estimación
-              local requiere validación con una sonda.
+              La distribución histórica de OD describe el dataset de referencia.
+              La estimación local requiere validación con una sonda.
             </p>
             <Table
               headings={[
                 "Grupo",
                 "Registros",
                 "%",
-                "Temp. °C",
-                "pH",
-                "EC mS/cm",
-                "hPa",
+                ...labels,
                 "OD medio",
                 "OD mediano",
                 "DE OD",
@@ -729,8 +740,9 @@ export function Clustering({ reference, technical }) {
           <section className="panel workspace-section">
             <h2>Selección del agrupamiento</h2>
             <p>
-              MiniBatchKMeans con k = {report.chosen} por mayor Silhouette. BIC
-              y AIC corresponden al ajuste GMM.
+              {report.algorithm === "kmeans" ? "K-Means" : "MiniBatchKMeans"}{" "}
+              con k = {report.chosen} por mayor Silhouette. BIC y AIC
+              corresponden al ajuste GMM.
             </p>
             <Table
               headings={[
@@ -770,7 +782,7 @@ export function Clustering({ reference, technical }) {
               />
             </details>
             <details>
-              <summary>Correlaciones Pearson de Florida</summary>
+              <summary>Correlaciones Pearson de la referencia</summary>
               <Table
                 headings={["Variable", ...labels]}
                 rows={report.correlation.map((row, index) => [
@@ -1082,6 +1094,8 @@ export function Predictions({
   canSend,
   technical,
   activeModels = ["catboost"],
+  environment = "manglar",
+  available = true,
 }) {
   const [values, setValues] = useState({
     at: "",
@@ -1120,6 +1134,7 @@ export function Predictions({
       const data = await api("environment/predictions", {
         validated,
         noConductivity,
+        environment,
         ...(csv ? { csv } : { row: values }),
       });
       setResults(data.predictions);
@@ -1129,11 +1144,17 @@ export function Predictions({
       setBusy(false);
     }
   }
+  if (!available)
+    return (
+      <Guidance title="Estimación de OD">
+        <p>Dataset especializado pendiente de incorporación.</p>
+      </Guidance>
+    );
   return (
     <section className="panel workspace-section">
       <h2>Estimar OD con una muestra o CSV</h2>
       <p>
-        La distancia ambiental se calcula con la referencia Florida. Los
+        La distancia ambiental se calcula con la referencia seleccionada. Los
         resultados son experimentales. La cobertura predictiva en Perú sigue sin
         establecerse.
       </p>
@@ -1233,7 +1254,7 @@ export function Predictions({
           {technical && (
             <p>
               Un puntaje Isolation Forest inferior a cero indica una muestra
-              atípica frente a Florida. La causa requiere investigación.
+              atípica frente a la referencia. La causa requiere investigación.
             </p>
           )}
           <Table
@@ -1275,12 +1296,12 @@ export function Predictions({
   );
 }
 
-export function Evaluation({ api }) {
+export function Evaluation({ api, environment = "manglar" }) {
   const [state, setState] = useState({});
   const [group, setGroup] = useState("global");
   useEffect(() => {
     let active = true;
-    api("environment/evaluation")
+    api(`environment/evaluation?environment=${encodeURIComponent(environment)}`)
       .then((report) => {
         if (active) setState({ report });
       })
@@ -1290,7 +1311,7 @@ export function Evaluation({ api }) {
     return () => {
       active = false;
     };
-  }, [api]);
+  }, [api, environment]);
   const { report, error } = state;
   const names = {
     A: "CatBoost existente",
@@ -1315,7 +1336,7 @@ export function Evaluation({ api }) {
   );
   return (
     <section className="panel workspace-section">
-      <h2>Evaluación temporal NOAA Florida 2024</h2>
+      <h2>Evaluación temporal · {report?.domain || "entorno seleccionado"}</h2>
       {report ? (
         <>
           <p>

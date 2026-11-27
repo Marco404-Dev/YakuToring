@@ -1,5 +1,7 @@
 # YakuToring · observatorio acuático
 
+Para publicar o configurar los entornos consulta [Despliegue en Render y Vercel](DESPLIEGUE.md) y la [hoja de ruta](ROADMAP.md). La referencia provisional de manglar usa NOAA Florida. Humedal y laboratorio están disponibles para monitorear y tienen datasets especializados pendientes.
+
 Plataforma React/Vite, Express, serialport y Python para telemetría LoRa, estimación experimental de OD, agrupamiento ambiental y análisis fisicoquímico. El Receiver se conecta por USB al PC Windows. Los visitantes consultan ese mismo backend mediante HTTP.
 
 La barra lateral ofrece **Inicio**, **Monitoreo**, **Análisis ambiental**, **Alertas** e **Historial**. Abre **Conectar dispositivo** desde la barra superior para elegir el puerto USB. En Análisis ambiental están Oxígeno disuelto, Perfiles ambientales, Análisis fisicoquímico e Investigación y validación. En Historial están las mediciones, las sesiones de 100 lecturas, los datasets, las campañas y la transferencia CSV. WhatsApp está en Alertas. El menú de usuario reúne ayuda, preferencias visuales y configuración de modelos.

@@ -37,6 +37,7 @@ import "./premium.css";
 import { ReferenceSettings, ReferenceStrip } from "./EnvironmentalControls.jsx";
 import { defaults, evaluateReference, referenceBand } from "./thresholds.js";
 import { diagnosticValues } from "../server/templates.js";
+import environments from "../config/environments.json";
 const local = (at) =>
   at
     ? new Date(at).toLocaleString("es-PE", { timeZone: "America/Lima" })
@@ -312,18 +313,45 @@ function App() {
     generation = useRef(0);
   const canSend = ["admin", "operator"].includes(auth.role),
     isAdmin = auth.role === "admin";
-  const reference = useReference(
-    api,
-    canSend && ["clustering", "datasets"].includes(module),
-  );
   const [chartKey, setChartKey] = useState("temperature");
   const [chartLimit, setChartLimit] = useState(120);
   const [fixedScale, setFixedScale] = useState(false);
   const [expandedChart, setExpandedChart] = useState(false);
   const [logoutSession, setLogoutSession] = useState(null);
   const [profile, setProfile] = useState(
-    () => localStorage.getItem("yaku-profile") || "lab",
+    () => localStorage.getItem("yaku-profile") || "E3",
   );
+  const [environment, setEnvironment] = useState(
+    () =>
+      localStorage.getItem("yaku-environment") ||
+      Object.keys(environments.environments).find(
+        (id) =>
+          environments.environments[id].regulatoryProfile ===
+          localStorage.getItem("yaku-profile"),
+      ) ||
+      environments.default,
+  );
+  const [useGeneral, setUseGeneral] = useState(false);
+  const selectedEnvironment =
+    environments.environments[environment] ||
+    environments.environments[environments.default];
+  const analysisEnvironment = useGeneral ? environments.default : environment;
+  const analysis = environments.environments[analysisEnvironment];
+  const reference = useReference(
+    api,
+    canSend && ["clustering", "datasets"].includes(module),
+    analysisEnvironment,
+  );
+  function chooseProfile(selection) {
+    setProfile(selection);
+    const entry = Object.entries(environments.environments).find(
+      ([, value]) => value.regulatoryProfile === selection,
+    );
+    if (entry) {
+      setEnvironment(entry[0]);
+      setUseGeneral(false);
+    }
+  }
   const [referenceOptions, setReferenceOptions] = useState(() => {
     try {
       return {
@@ -338,7 +366,8 @@ function App() {
   useEffect(() => {
     localStorage.setItem("yaku-profile", profile);
     localStorage.setItem("yaku-reference", JSON.stringify(referenceOptions));
-  }, [profile, referenceOptions]);
+    localStorage.setItem("yaku-environment", environment);
+  }, [profile, referenceOptions, environment]);
   useEffect(() => {
     if (canSend)
       api("environment/anomalies")
@@ -553,7 +582,11 @@ function App() {
     hasPacket,
   });
   const run = state.ml?.liveOD;
-  const liveOD = hasPacket && run?.at >= state.connectedAt ? run : null;
+  const monitorMatches =
+    (state.ml?.monitorEnvironment || environments.default) ===
+    analysisEnvironment;
+  const liveOD =
+    hasPacket && run?.at >= state.connectedAt && monitorMatches ? run : null;
   const attention = reviewReadings(rows, sensors, state.anomalyThreshold);
   const connectionButton = (
     <button className="primary" onClick={openConnection}>
@@ -754,11 +787,78 @@ function App() {
               </div>
             </div>
             <SectionNav page={module} />
+            {[
+              "clustering",
+              "oxigeno",
+              "validacion",
+              "datasets",
+              "iot",
+              "resumen",
+            ].includes(module) && (
+              <details
+                className="panel guidance"
+                open={
+                  !selectedEnvironment.artifacts &&
+                  ["clustering", "oxigeno"].includes(module)
+                    ? true
+                    : undefined
+                }
+              >
+                <summary>
+                  Entorno de análisis · {selectedEnvironment.name}
+                </summary>
+                <label>
+                  Entorno de monitoreo
+                  <select
+                    value={environment}
+                    onChange={(event) =>
+                      chooseProfile(
+                        environments.environments[event.target.value]
+                          .regulatoryProfile,
+                      )
+                    }
+                  >
+                    {Object.entries(environments.environments).map(
+                      ([id, entry]) => (
+                        <option value={id} key={id}>
+                          {entry.name}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+                <p>
+                  {selectedEnvironment.dataset
+                    ? `${selectedEnvironment.dataset.name} · ${selectedEnvironment.dataset.geography} · ${selectedEnvironment.validation}`
+                    : "Dataset especializado pendiente de incorporación."}
+                </p>
+                {selectedEnvironment.limitations.map((item) => (
+                  <p key={item}>{item}</p>
+                ))}
+                {!selectedEnvironment.artifacts && (
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={useGeneral}
+                      onChange={(e) => setUseGeneral(e.target.checked)}
+                    />
+                    Usar Florida y CatBoost general como referencia provisional
+                    para esta vista
+                  </label>
+                )}
+                {monitorMatches ? null : (
+                  <p>
+                    La estación sigue registrando con el entorno configurado en
+                    el servidor. Cambiar esta vista no altera la adquisición.
+                  </p>
+                )}
+              </details>
+            )}
             {(["iot", "oxigeno"].includes(module) ||
               (module === "resumen" && hasPacket)) && (
               <ReferenceStrip
                 profile={profile}
-                setProfile={setProfile}
+                setProfile={chooseProfile}
                 options={referenceOptions}
                 row={{
                   ...last,
@@ -862,113 +962,134 @@ function App() {
                 title="Asistente de conexión"
                 onClose={() => setConnectionOpen(false)}
               >
-                <LinkFlow packet={last?.id} active={hasPacket && !noData} />
-                <p>
-                  Última recepción · {local(hasPacket ? last?.at : null)}
-                  {finite(last?.rssi) && ` · RSSI ${last.rssi} dBm`}
-                  {finite(last?.snr) && ` · SNR ${last.snr} dB`}
-                </p>
-                <ol className="connection-steps">
-                  <li>
-                    Enciende el Sender y conecta el Heltec Receiver por USB.
-                  </li>
-                  <li>
-                    Selecciona el puerto COM del Receiver. Cierra el Monitor
-                    Serial si lo está usando.
-                  </li>
-                  <li>Pulsa Conectar.</li>
-                  <li>Espera el primer paquete por LoRa.</li>
-                  <li>
-                    <a href="#iot" onClick={() => setConnectionOpen(false)}>
-                      Abrir monitoreo en tiempo real
-                    </a>
-                  </li>
-                </ol>
-                <section className="panel connection">
-                  <div>
-                    <h2>Heltec Receiver</h2>
-                    <p>USB serial · 115200 baudios · computadora principal</p>
-                  </div>
-                  <div className="device">
-                    <i className={state.status.connected ? "on" : ""} />
-                    {deviceLabel}
-                    {state.status.path && ` · ${state.status.path}`}
-                  </div>
-                  {isAdmin ? (
-                    <>
-                      <div className="controls">
-                        <label>
-                          Puerto COM
-                          <select
-                            value={selected}
-                            disabled={state.status.connected || busy}
-                            onChange={(e) => {
-                              setSelected(e.target.value);
-                              localStorage.setItem("yaku-port", e.target.value);
-                            }}
-                          >
-                            <option value="">Selecciona un puerto</option>
-                            {selected &&
-                              !ports.some((p) => p.path === selected) && (
-                                <option value={selected}>
-                                  {selected} (no disponible)
-                                </option>
-                              )}
-                            {ports.map((p) => (
-                              <option key={p.path} value={p.path}>
-                                {p.path} {p.manufacturer || ""}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button disabled={busy} onClick={refresh}>
-                          ↻ Actualizar
-                        </button>
-                        <button
-                          className="primary"
-                          disabled={
-                            !online ||
-                            busy ||
-                            state.status.connected ||
-                            !ports.some((p) => p.path === selected)
-                          }
-                          onClick={() => connectDevice()}
-                        >
-                          Conectar
-                        </button>
-                        <button
-                          disabled={busy || !state.status.connected}
-                          onClick={() => action("disconnect")}
-                        >
-                          Desconectar
-                        </button>
-                        {state.status.connected && (
-                          <button
-                            disabled={busy || !online || connecting}
-                            onClick={() => connectDevice(true)}
-                          >
-                            Reconectar
-                          </button>
-                        )}
+                {state.serialMode === "agent" ? (
+                  <>
+                    <LinkFlow packet={last?.id} active={hasPacket && !noData} />
+                    <p>
+                      Abre el agente Heltec en el equipo conectado al Receiver.
+                      La estación se activa al recibir paquetes reales por
+                      HTTPS.
+                    </p>
+                    <p>
+                      Última recepción · {local(hasPacket ? last?.at : null)}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <LinkFlow packet={last?.id} active={hasPacket && !noData} />
+                    <p>
+                      Última recepción · {local(hasPacket ? last?.at : null)}
+                      {finite(last?.rssi) && ` · RSSI ${last.rssi} dBm`}
+                      {finite(last?.snr) && ` · SNR ${last.snr} dB`}
+                    </p>
+                    <ol className="connection-steps">
+                      <li>
+                        Enciende el Sender y conecta el Heltec Receiver por USB.
+                      </li>
+                      <li>
+                        Selecciona el puerto COM del Receiver. Cierra el Monitor
+                        Serial si lo está usando.
+                      </li>
+                      <li>Pulsa Conectar.</li>
+                      <li>Espera el primer paquete por LoRa.</li>
+                      <li>
+                        <a href="#iot" onClick={() => setConnectionOpen(false)}>
+                          Abrir monitoreo en tiempo real
+                        </a>
+                      </li>
+                    </ol>
+                    <section className="panel connection">
+                      <div>
+                        <h2>Heltec Receiver</h2>
+                        <p>
+                          USB serial · 115200 baudios · computadora principal
+                        </p>
                       </div>
-                      <small className="connection-help">
-                        Los puertos pertenecen al PC principal. Cierra el
-                        Monitor Serial de Arduino antes de conectar.
-                      </small>
-                    </>
-                  ) : (
-                    <small>
-                      El control del puerto USB requiere una cuenta
-                      administradora.
-                    </small>
-                  )}
-                  {state.status.error && (
-                    <small className="connection-help">
-                      {state.status.error}
-                    </small>
-                  )}
-                  {error && <p role="alert">{error}</p>}
-                </section>
+                      <div className="device">
+                        <i className={state.status.connected ? "on" : ""} />
+                        {deviceLabel}
+                        {state.status.path && ` · ${state.status.path}`}
+                      </div>
+                      {isAdmin ? (
+                        <>
+                          <div className="controls">
+                            <label>
+                              Puerto COM
+                              <select
+                                value={selected}
+                                disabled={state.status.connected || busy}
+                                onChange={(e) => {
+                                  setSelected(e.target.value);
+                                  localStorage.setItem(
+                                    "yaku-port",
+                                    e.target.value,
+                                  );
+                                }}
+                              >
+                                <option value="">Selecciona un puerto</option>
+                                {selected &&
+                                  !ports.some((p) => p.path === selected) && (
+                                    <option value={selected}>
+                                      {selected} (no disponible)
+                                    </option>
+                                  )}
+                                {ports.map((p) => (
+                                  <option key={p.path} value={p.path}>
+                                    {p.path} {p.manufacturer || ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <button disabled={busy} onClick={refresh}>
+                              ↻ Actualizar
+                            </button>
+                            <button
+                              className="primary"
+                              disabled={
+                                !online ||
+                                busy ||
+                                state.status.connected ||
+                                !ports.some((p) => p.path === selected)
+                              }
+                              onClick={() => connectDevice()}
+                            >
+                              Conectar
+                            </button>
+                            <button
+                              disabled={busy || !state.status.connected}
+                              onClick={() => action("disconnect")}
+                            >
+                              Desconectar
+                            </button>
+                            {state.status.connected && (
+                              <button
+                                disabled={busy || !online || connecting}
+                                onClick={() => connectDevice(true)}
+                              >
+                                Reconectar
+                              </button>
+                            )}
+                          </div>
+                          <small className="connection-help">
+                            Los puertos pertenecen al PC principal. Cierra el
+                            Monitor Serial de Arduino antes de conectar.
+                          </small>
+                        </>
+                      ) : (
+                        <small>
+                          El control del puerto USB requiere una cuenta
+                          administradora.
+                        </small>
+                      )}
+                      {state.status.error && (
+                        <small className="connection-help">
+                          {state.status.error}
+                        </small>
+                      )}
+                      {error && <p role="alert">{error}</p>}
+                    </section>
+                  </>
+                )}
               </Dialog>
             )}
             {helpOpen && (
@@ -1346,7 +1467,12 @@ function App() {
               </>
             )}
             {module === "clustering" && (
-              <Clustering reference={reference} technical={technical} />
+              <Clustering
+                key={analysisEnvironment}
+                reference={reference}
+                technical={technical}
+                environment={analysis}
+              />
             )}
             {module === "anomalias" && (
               <Anomalies
@@ -1393,7 +1519,9 @@ function App() {
                 </details>
               </>
             )}
-            {module === "validacion" && technical && <Evaluation api={api} />}
+            {module === "validacion" && technical && (
+              <Evaluation api={api} environment={analysisEnvironment} />
+            )}
             {module === "oxigeno" && (
               <>
                 <OxygenGuide live={liveOD} last={hasPacket ? last : null} />
@@ -1404,7 +1532,7 @@ function App() {
                     indican lecturas sin estimación.
                   </p>
                   <Chart
-                    rows={rows}
+                    rows={monitorMatches ? rows : []}
                     sensor={{
                       key: "od_estimado_mg_l",
                       name: "OD estimado",
@@ -1414,6 +1542,9 @@ function App() {
                   />
                 </section>
                 <Predictions
+                  key={analysisEnvironment}
+                  environment={analysisEnvironment}
+                  available={Boolean(analysis.artifacts?.catboost)}
                   api={api}
                   canSend={canSend}
                   technical={technical}
@@ -1422,11 +1553,11 @@ function App() {
                 <details open={technical}>
                   <summary>Información técnica del modelo</summary>
                   <p>
-                    CatBoost 07 · entrenado con 300.000 registros NOAA. La
-                    representatividad se comprueba con el perfil de referencia
-                    Florida.
+                    {analysis.dataset
+                      ? `${analysis.dataset.name} · ${analysis.artifacts.version} · ${analysis.validation}`
+                      : "Dataset especializado pendiente de incorporación."}
                   </p>
-                  <Evaluation api={api} />
+                  <Evaluation api={api} environment={analysisEnvironment} />
                   <ExperimentalODPanel
                     ml={state.ml}
                     canReference={canSend}

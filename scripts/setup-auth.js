@@ -3,9 +3,11 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { hashPassword } from "../server/auth.js";
-const dir = fileURLToPath(new URL("../.local/", import.meta.url));
+const defaultDir = fileURLToPath(new URL("../.local/", import.meta.url));
+const target =
+  process.env.YAKUTORING_USERS_PATH || path.join(defaultDir, "users.json");
+const dir = path.dirname(target);
 fs.mkdirSync(dir, { recursive: true });
-const target = path.join(dir, "users.json");
 if (fs.existsSync(target)) {
   console.log(
     "Usuarios existentes conservados. No se cambió ninguna contraseña.",
