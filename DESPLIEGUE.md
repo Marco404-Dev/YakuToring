@@ -2,10 +2,10 @@
 
 ## Render
 
-1. En Render, crea un **Blueprint** a partir de `Marco404-Dev/YakuToring`, rama `main`, archivo `render.yaml`. El plan Starter y el disco de 1 GB generan costo. Usa una instancia mientras SQLite esté en disco.
+1. En Render, crea un **Blueprint** a partir de `Marco404-Dev/YakuToring`, rama `main`, archivo `render.yaml`. La configuración gratuita usa SQLite temporal y puede perder capturas en un reinicio o despliegue.
 2. Copia a `YAKUTORING_FRONTEND_ORIGIN` el origen HTTPS exacto de Vercel, por ejemplo `https://tu-proyecto.vercel.app`. Deja que Render establezca `PORT` y `RENDER_EXTERNAL_URL`. El indicador de salud es `/healthz`.
-3. En la consola de Render ejecuta `node scripts/setup-auth.js`. Recupera las credenciales desde `/app/storage/credenciales.txt` de forma privada y guarda el archivo de usuarios en el disco. Cada reinicio invalida las sesiones web.
-4. El disco conserva SQLite, usuarios y el registro de telemetría. Mantén respaldos SQLite fuera del servicio y planifica la rotación de `telemetry.jsonl`. El historial visible de transmisión depende del proceso, mientras las sesiones guardadas se recuperan desde SQLite.
+3. Configura como variable secreta `YAKUTORING_USERS_JSON` un JSON de cuentas con hashes scrypt generado por `node scripts/setup-auth.js`. Utiliza una cuenta exclusiva de demostración y guarda sus credenciales en privado. Cada reinicio invalida las sesiones web.
+4. Descarga los CSV de cualquier sesión de interés. Para conservar archivos entre reinicios, mantén una estación local o migra a un servicio con disco persistente y respaldo SQLite.
 5. CatBoost y las referencias se cargan desde archivos versionados. El contenedor por defecto usa CatBoost y no instala PyTorch. Para habilitar MLP e híbridos, usa una compilación con `INSTALL_TORCH=1` y verifica el presupuesto de memoria. Valida los primeros arranques y amplía la instancia si lo requieren las métricas.
 6. WhatsApp es opcional. Usa el grupo `WHATSAPP_*` de `.env.example` como referencia. Configura el webhook directamente en el origen HTTPS de Render si necesitas estados de entrega. Guarda todos los valores privados como secretos de Render.
 

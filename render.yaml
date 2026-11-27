@@ -2,12 +2,8 @@ services:
   - type: web
     name: yakutoring-api
     runtime: docker
-    plan: starter
+    plan: free
     healthCheckPath: /healthz
-    disk:
-      name: yakutoring-data
-      mountPath: /app/storage
-      sizeGB: 1
     envVars:
       - key: YAKUTORING_SERIAL_MODE
         value: agent
@@ -16,11 +12,11 @@ services:
       - key: YAKUTORING_MONITOR_ENVIRONMENT
         value: manglar
       - key: YAKUTORING_ML_DB_PATH
-        value: /app/storage/ml.sqlite
-      - key: YAKUTORING_USERS_PATH
-        value: /app/storage/users.json
+        value: /app/.local/ml.sqlite
       - key: YAKUTORING_TELEMETRY_PATH
-        value: /app/storage/telemetry.jsonl
+        value: /app/.local/telemetry.jsonl
+      - key: YAKUTORING_USERS_JSON
+        sync: false
       - key: YAKUTORING_FRONTEND_ORIGIN
         sync: false
       - key: YAKUTORING_INGEST_TOKEN

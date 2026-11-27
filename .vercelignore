@@ -1,0 +1,14 @@
+.env
+.env.*
+.local/
+.venv*/
+tools/
+node_modules/
+dist/
+verification/
+.git/
+ml/datasets/
+ml/vendor/**/datos/
+ml/vendor/**/*.ipynb
+*.sqlite*
+*.log

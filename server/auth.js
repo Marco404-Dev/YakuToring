@@ -32,7 +32,7 @@ export function installSecurity(app, root, port) {
   ].filter((value) => value && /^https:\/\/[^/]+$/.test(value));
   const users = () => {
     try {
-      return JSON.parse(fs.readFileSync(configPath, "utf8"));
+      return JSON.parse(process.env.YAKUTORING_USERS_JSON || fs.readFileSync(configPath, "utf8"));
     } catch {
       return {};
     }
