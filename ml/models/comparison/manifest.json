@@ -1,0 +1,32 @@
+[
+  {
+    "path": "entrenamiento_07/07_CatBoost_base05_300k.joblib",
+    "source": "C:\\Users\\USER\\Documents\\Proyectos\\YakuToring_MachineLearning\\models\\entrenamiento_07\\07_CatBoost_base05_300k.joblib",
+    "sha256": "234e7d1c4132a384216bd2479c24034ceab38679eaf887aece0a7d284beb4add"
+  },
+  {
+    "path": "deep_learning_08/08_MLP_128-64-32_experimental.pt",
+    "source": "C:\\Users\\USER\\Documents\\Proyectos\\YakuToring_MachineLearning\\models\\deep_learning_08\\08_MLP_128-64-32_experimental.pt",
+    "sha256": "78ef884ad6077cf14c206096d5a27dee14392621abd9f8dd2c3a214958c583f0"
+  },
+  {
+    "path": "deep_learning_08/08_MLP_128-64-32_experimental_scaler.joblib",
+    "source": "C:\\Users\\USER\\Documents\\Proyectos\\YakuToring_MachineLearning\\models\\deep_learning_08\\08_MLP_128-64-32_experimental_scaler.joblib",
+    "sha256": "db121c7917a8bf53ed4d754346fad0a46bf9c0369e6c3b4d538e03d6a6c3cd88"
+  },
+  {
+    "path": "deep_learning_08/08_MLP_128-64-32_experimental.json",
+    "source": "C:\\Users\\USER\\Documents\\Proyectos\\YakuToring_MachineLearning\\models\\deep_learning_08\\08_MLP_128-64-32_experimental.json",
+    "sha256": "347c22af4f5c451b98ff046d3b1459633c31ba0121f9123b24fe21a1d9a14ba6"
+  },
+  {
+    "path": "hibrido_09/09_mezcla_ponderada_experimental.json",
+    "source": "C:\\Users\\USER\\Documents\\Proyectos\\YakuToring_MachineLearning\\models\\hibrido_09\\09_mezcla_ponderada_experimental.json",
+    "sha256": "a4fe711a0f5ce6488fcf4bba7d1b8c0960efb33125fe87c7eea3dc21bd5b5166"
+  },
+  {
+    "path": "hibrido_09/09_stacking_Ridge_experimental.joblib",
+    "source": "C:\\Users\\USER\\Documents\\Proyectos\\YakuToring_MachineLearning\\models\\hibrido_09\\09_stacking_Ridge_experimental.joblib",
+    "sha256": "81370036c1cac576387af73737cecea65d8ded6477ef1e049e4b5ed7ecaa61ae"
+  }
+]

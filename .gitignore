@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.local/
+tools/
+.venv-ml/
+.venv/
+__pycache__/
+*.pyc
+*.sqlite*
+*.db
+*.pem
+*.key
+*.zip
+.vercel/
+verification/
+users.json
+credenciales.txt
+ml/datasets/
+# Copias originales y salidas de cuadernos sin auditoría completa de procedencia.
+ml/vendor/**/datos/
+ml/vendor/**/*.ipynb
+ml/vendor/**/ejemplo_sensores_*.csv

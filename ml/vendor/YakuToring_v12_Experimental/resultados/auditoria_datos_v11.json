@@ -1,0 +1,8 @@
+{
+  "registros_csv": 31163,
+  "registros_desarrollo": 24876,
+  "registros_horarios_historico_6h": 5642,
+  "inicio_test_expuesto": "2023-08-23 13:15:00+00:00",
+  "sha256": "5695236e836ea387add63314024eb6d96159aec69b126d8f80ece963f48f94cc",
+  "nota": "El 20% final no se utiliza en la selección ni en el entrenamiento."
+}

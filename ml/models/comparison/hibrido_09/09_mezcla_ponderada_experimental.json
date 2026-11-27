@@ -1,0 +1,30 @@
+{
+  "notebook": "09_Modelo_Hibrido_CatBoost_MLP",
+  "tipo": "mezcla_ponderada",
+  "peso_CatBoost": 0.55,
+  "peso_MLP": 0.44999999999999996,
+  "variables": [
+    "Temp",
+    "pH",
+    "SpCond",
+    "BP_hPa",
+    "hora_sin",
+    "hora_cos",
+    "dia_sin",
+    "dia_cos"
+  ],
+  "objetivo": "DO_mgl",
+  "semilla": 42,
+  "catboost_archivo": "models\\entrenamiento_07\\07_CatBoost_base05_300k.joblib",
+  "mlp_pesos_archivo": "models\\deep_learning_08\\08_MLP_128-64-32_experimental.pt",
+  "mlp_scaler_archivo": "models\\deep_learning_08\\08_MLP_128-64-32_experimental_scaler.joblib",
+  "mlp_arquitectura": [
+    128,
+    64,
+    32
+  ],
+  "ajuste_pesos": "2023 (30,000 filas; MLP seleccionada también con 2023)",
+  "comparacion": "2024 (60,000 filas, exploratoria)",
+  "test": "2025-2026 no leído",
+  "nota": "Investigación experimental: validar NOAA, unidades SpCond/TDS y en campo antes de despliegue."
+}

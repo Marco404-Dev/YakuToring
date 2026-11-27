@@ -1,0 +1,21 @@
+fecha_hora_UTC,temperatura_agua_C,pH,conductividad_especifica_mS_cm,presion_atmosferica_hPa,OD_estimado_mg_L,OD_v10_referencia_mg_L,modo,fuera_rango_historico,apto_alerta_automatica,advertencia
+2022-08-07 01:00:00+00:00,31.9,7.3,21.44,1020,1.2191166185500881,1.2191166185500881,v5_instantaneo_sin_historial,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 02:00:00+00:00,31.8,7.3,21.08,1021,1.2117485727319588,1.2117485727319588,v5_instantaneo_sin_historial,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 03:00:00+00:00,31.8,7.2,21.87,1022,0.6626804087079012,0.6626804087079012,v5_instantaneo_sin_historial,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 04:00:00+00:00,31.8,7.2,21.98,1022,0.6202602117084233,0.6202602117084233,v5_instantaneo_sin_historial,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 05:00:00+00:00,31.8,7.2,22.06,1022,0.5815824283658504,0.5815824283658504,v5_instantaneo_sin_historial,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 06:00:00+00:00,31.8,7.2,22.0,1021,0.5275232182329912,0.5275232182329912,v5_instantaneo_sin_historial,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 07:00:00+00:00,31.6,7.2,21.48,1021,0.6689949002603686,0.619579339893428,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 08:00:00+00:00,31.5,7.2,21.52,1020,0.6776782939309269,0.6172301683120014,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 09:00:00+00:00,31.5,7.3,22.3,1020,1.086753025737758,1.0311391406452093,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 10:00:00+00:00,31.5,7.3,22.88,1020,0.9028682804190966,0.7980431905564083,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 11:00:00+00:00,31.2,7.4,23.29,1021,1.8567785431544102,1.6162748605670512,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 12:00:00+00:00,31.1,7.4,24.62,1021,1.783853065390324,1.6409809761821212,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 13:00:00+00:00,31.1,7.3,24.91,1021,1.0128118910954766,0.8439008367469665,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 14:00:00+00:00,31.1,7.4,25.44,1022,1.3258501154983744,1.3828446761103557,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 15:00:00+00:00,31.1,7.4,25.94,1022,1.2207294872259085,1.303736291402576,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 16:00:00+00:00,31.0,7.3,26.17,1022,0.7766711431093545,0.7636544506103942,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 17:00:00+00:00,31.1,7.4,25.61,1022,1.047114131059188,1.3332417944064834,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 18:00:00+00:00,31.3,7.5,23.64,1022,2.872141511752184,2.5732164961326363,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 19:00:00+00:00,31.2,7.5,21.76,1021,3.662697244747659,3.151497394373596,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes
+2022-08-07 20:00:00+00:00,31.2,7.3,24.75,1020,0.7866149172495702,0.8884954773839864,v11_huber_depth7_experimental,False,False,Prediccion experimental sin validacion Hach / Tumbes

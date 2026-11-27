@@ -1,0 +1,40 @@
+{
+  "modelo": "MLP PyTorch",
+  "arquitectura": [
+    128,
+    64,
+    32
+  ],
+  "features": [
+    "Temp",
+    "pH",
+    "SpCond",
+    "BP_hPa",
+    "hora_sin",
+    "hora_cos",
+    "dia_sin",
+    "dia_cos"
+  ],
+  "objetivo": "DO_mgl",
+  "train_periodo": "2015-2022",
+  "early_stopping_y_seleccion": "2023",
+  "comparacion_exploratoria": "2024 (60,000 observaciones reproducibles)",
+  "test": "2025-2026 NO leído",
+  "mae_2023": 0.4789644479751587,
+  "metricas_2024_MLP": {
+    "modelo": "MLP_PyTorch_128-64-32",
+    "MAE_mg_L": 0.5216722203572591,
+    "RMSE_mg_L": 0.7197147600348061,
+    "R2": 0.8441506399392021,
+    "MAE_4_10_mg_L": 0.48153850899487927,
+    "MAE_menor_4_mg_L": 1.1530251542456311,
+    "n_valid": 60000,
+    "n_4_10": 54770,
+    "n_menor_4": 2054
+  },
+  "pesos": "08_MLP_128-64-32_experimental.pt",
+  "escalador": "08_MLP_128-64-32_experimental_scaler.joblib",
+  "modo": "LIGERO",
+  "seed": 42,
+  "advertencia": "EXPERIMENTAL. Calidad NOAA, equivalencia TDS/SpCond y precisión en campo pendientes."
+}

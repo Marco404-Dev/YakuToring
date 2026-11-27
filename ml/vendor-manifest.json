@@ -1,0 +1,30 @@
+{
+  "sourceZip": "YakuToring_v12_Proyecto_Completo.zip",
+  "zipSha256": "df56d73c950a37bebf330a8398a37e6fda74f5295ef0e551fa55d2734b4274a8",
+  "providedNotebookSha256": "5329b570786b6e9bf2929b7822c09a6e5e8ae223411fe402e69985e295f0cac6",
+  "archivedNotebookSha256": "5329b570786b6e9bf2929b7822c09a6e5e8ae223411fe402e69985e295f0cac6",
+  "files": {
+    "src/caracteristicas.py": "9c99127c36c14670f181cb076226c1b346bb8568e65a0219a920e0582e9b8610",
+    "src/descargar_swmp.py": "506866365e33b2a376dde0020de029d86a559561b3a8dbb3cf6f94f707451ee9",
+    "src/entrenar_v11.py": "514f584ef56aac1a7bd76a2123fc7d2d28b22e8176259d6618afaae1bf26042c",
+    "src/entrenar_v12.py": "ffb7bde02909cc46bc83f88070377ac3c38f167144e9740d0f304d5b4c3b1534",
+    "src/entrenar_y_comparar.py": "b959a3a9b1fdd579f97459f8f69dc07d695df75eeab9aa6411faf0979f39b55d",
+    "src/estacional_exploratorio.py": "1928cf194ac1e61c880782e07e90d196ca757e6dfcc490802e806edfd35bf290",
+    "src/estres_temporal.py": "e72f5aeb4b781a1d6a946124e50fbf08d84dad9cf206dc6ffd0d83290f696412",
+    "src/fisica_benson.py": "c0ef03eefea8e2766e105bcdfe09e51e21e595b9d9940b04d24670b203c99486",
+    "src/importar_noaa.py": "d69162cf33a253bc51d8d119d2589c2e75e7948b41dae6273842a1e51625d1d7",
+    "src/predecir.py": "a56a927678c55774f2e6ab6ebe114af8a79667386f2561233c798263728fa13b",
+    "src/predecir_v11.py": "616951a38e180e295b6e3e481a88bcf4ab364c4a386c2cd0404519089ce04df6",
+    "src/predecir_v12.py": "7a5d65449fab629d87a6a612b4a3963eccb468fdaa26b6701ea7a6a71b5baf56",
+    "src/pruebas.py": "fab2fd50f9bfe33064bb1d2d656bfbe88685f1f45661ff676f62d82e820098e0",
+    "src/pruebas_v11.py": "c84cd2eba64158986d997be0ddfe6604a0757cfe72831513b9646a241a07bfb6",
+    "src/pruebas_v12.py": "872bf83a1b5b0e8a0a667b190f39363a9361650de187aa02e0593bccf06ce1f2",
+    "src/validar_hach.py": "244ab4d2d293e5fbdd3335a60ac00d28a64fda32fec562f9d18bb28ef8dc5e48",
+    "src/validar_hach_v11.py": "b805781ef1d7336bcaac03df8cf3272ad6f71938f7e71f55e1c72058ff4fcdd4",
+    "src/validar_hach_v12.py": "acf1d25d6fa0a2ab911a7f7de76915c4a37daa703a609c25de048b0c7a2323e5",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modelos/yakutoring_v10.joblib": "e6238d75a9bdd02079587e3d46e8c5abfd8938d48fb4a01af23bd257e716e128",
+    "modelos/yakutoring_v11.joblib": "4d9d9a458004a93c6971a02f116e5a0e0eb5896c04cbd87682c0cf75e33fcad4",
+    "modelos/yakutoring_v12.joblib": "bb4f687da3b18370c7e0932a861005384af63cbc8f72e3a1643ebaefb8f37898"
+  }
+}
