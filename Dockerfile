@@ -22,6 +22,7 @@ COPY --from=frontend /app/node_modules ./node_modules
 COPY --from=frontend /app/dist ./dist
 COPY package.json ./
 COPY server ./server
+COPY src/environment.js src/sensors.js ./src/
 COPY ml ./ml
 COPY config ./config
 COPY scripts/setup-auth.js ./scripts/setup-auth.js

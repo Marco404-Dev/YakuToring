@@ -1,5 +1,9 @@
 # YakuToring · observatorio acuático
 
+[Aplicación pública](https://yakutoring.vercel.app/) · [Estado de la API](https://yakutoring-api.onrender.com/healthz)
+
+El observatorio público requiere una cuenta autorizada. La demostración usa almacenamiento temporal en Render.
+
 Para publicar o configurar los entornos consulta [Despliegue en Render y Vercel](DESPLIEGUE.md) y la [hoja de ruta](ROADMAP.md). La referencia provisional de manglar usa NOAA Florida. Humedal y laboratorio están disponibles para monitorear y tienen datasets especializados pendientes.
 
 Plataforma React/Vite, Express, serialport y Python para telemetría LoRa, estimación experimental de OD, agrupamiento ambiental y análisis fisicoquímico. El Receiver se conecta por USB al PC Windows. Los visitantes consultan ese mismo backend mediante HTTP.
